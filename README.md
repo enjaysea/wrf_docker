@@ -15,7 +15,7 @@ Don't manually create your output directory on your local machine. Allow the `do
 This seems to happen no matter what on Windows 10, so I suggest you use `WSL`[a free Windows 10 virtualization framework](https://docs.microsoft.com/en-us/windows/wsl/install-win10) instead, since this problem can be prevented when running from a Linux shell.
 
 ### Build the container
-If you pulled this container directly from [hub.docker.com](hub.docker.com/enjaysea/wrf) then you can skip this step and go to the next section: **Starting the container**.
+If you pulled this container directly from [hub.docker.com](https://hub.docker.com/repository/docker/enjaysea/wrf) then you can skip this step and go to the next section: **Starting the container**.
 
 If you are using the [enjaysea/wrf_docker](https://github.com/enjaysea/wrf_docker) github repo then you will need to build the container first with:
 ```

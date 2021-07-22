@@ -1,16 +1,18 @@
-﻿## WRF Docker image
+## WRF Docker image
 
 This is NCAR's WRF (Weather Research and Forecasting model) version 4.2.2  based on a Centos 7 (Linux) image. It includes some sample data so you can test the system by creating a PDF to display a visualization of some data. 
 
 This image is based on the NCAR/WRF_DOCKER Github repository provided by John Exby, Kate Fossell, and Dave Gill. I've made these further modifications:
-* Upgraded to WRF 4.2.2 (from 4.0)
+* Upgraded to WRF 4.2.2 (from 4.0.3)
 * Enhanced this documentation for clarity and ease-of-use.
 * Added some environment variables to use the system comfortably in /bin/bash
-* Moved the creation of one of the config files into the build process
+* Migrated the creation of one of the config files into the build process
 
 In order to prevent losing the output data, when the container is stopped, you should set up a directory on your local filesystem that will be mapped to a directory within the container. Anything stored in one directory will be visible in the other. 
 
-Don't manually create your output directory on your local machine. Allow the `docker run` command to create it for you. Otherwise, this can lead to the folder being owned by `root` and the built-in `wrfuser` won't be able to write to the directory.
+Don't manually create your output directory on your local machine. Allow the `docker run` command to create it for you. Otherwise, you may end up with the folder being owned by `root` and the built-in `wrfuser` unable to write to the directory.
+
+This seems to happen no matter what on Windows 10, so I suggest you use `WSL`[a free Windows 10 virtualization framework](https://docs.microsoft.com/en-us/windows/wsl/install-win10) instead, since this problem can be prevented when running from a Linux shell.
 
 ### Build the container
 If you pulled this container directly from [hub.docker.com](hub.docker.com/enjaysea/wrf_docker) then you can skip this step and go to the next section: **Starting the container**.
@@ -178,6 +180,7 @@ mpirun -n 2 real.exe
 ```
 The following should appear as the last line of `rsl.out.0000`
 ```
+cat rsl.out.0000
 d01 2016-03-24_00:00:00 real_em: SUCCESS COMPLETE REAL_EM INIT
 ```
 And you should be able now to see the following 2 files:
@@ -225,90 +228,61 @@ ls -l wrfo*
 -rw-r--r-- 1 wrfuser wrf 19177740 Jul 21 21:28 wrfout_d01_2016-03-24_00:00:00
 ```
 
-####  Create imagery
-1. There are two methods of constructing imagery with data that is inside a container. The first method is to simply get the data that is inside the container to be visible outide the container. Once that happens, the usual post-processing methods you prefer are available.
-
-2. Push the WRF output files to the visible volume for easy visualization
+####  Create imagery outside the container
+To make the output files available on your local filesystem for any visualization work you might want to perform, copy (or move) them to the `wrfoutput` folder:
 ```
-    cp wrfo* /wrf/wrfoutput/
-    ls -ls /wrf/wrfoutput
-    total 145148
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_00:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_03:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_06:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_09:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_12:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_15:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_18:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-23_21:00:00
-    18648 -rw-r--r-- 1 wrfuser wrf 19095444 Dec  3 20:04 wrfout_d01_2016-03-24_00:00:00
+cp wrfo* /wrf/wrfoutput/
 ```
-3. From outside of the container from from the native host OS (notice the different time zones and different block sizes, because in this example the host OS is Darwin and the container OS is Linux!).
+Now they will be available outside the container in your mapped output folder, and will remain there even if the container is stopped.
+
+#### Create imagery inside the container
+You may also create a PDF visualizing your data output from within the container. This will serve as a test to make sure you've successfully built and installed the system.
 ```
-    ls -ls OUTPUT
-    total 335664
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_00:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_03:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_06:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_09:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_12:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_15:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_18:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-23_21:00:00
-    37296 -rw-r--r--  1 gill  1500  19095444 Dec  3 13:04 wrfout_d01_2016-03-24_00:00:00
+cd /wrf/WRF_NCL_scripts
 ```
-NOTE: These files are now eligible for any post-processing / visualization that is typically done with your WRF model output.
+Now edit the `wrf_Precip_multi_files.ncl` file. You may use either `vi` or `emacs` to edit the file since both of them are available in the container.
 
-
-4. The built container includes the NCAR Command Language. You can run NCL scripts from within container.
-   * Get to the WRF_NCL_scripts directory (on the same level as WRF and WPS).
-   * Edit the wrf_Precip_multi_files.ncl file  
-
-NOTE: Change the location of the WRF output files  
+Make this change to the `DATADir` setting.
 Original line:
 ```
-        DATADir = "/kiaat2/bruyerec/WRF/WRFV3_4861/test/em_real/split_files/"
+DATADir = "/kiaat2/bruyerec/WRF/WRFV3_4861/test/em_real/split_files/"
 ```
-New Line:
+Modified line:
 ```
-        DATADir = "/wrf/WRF/test/em_real/"
+DATADir = "/wrf/WRF/test/em_real/"
 ```
-
-NOTE: Change the type of plot from x11 (screen image) to pdf (file format)  
+Make this change to the output type setting.
 Original Line:
 ```
-          type = "x11"
-        ; type = "pdf"
+  type = "x11"
+; type = "pdf"
 ```
-New Line:
+Modified line:
 ```
-        ; type = "x11"
-          type = "pdf"
+; type = "x11"
+  type = "pdf"
 ```
-
-NOTE: Change the TITLE to reflect the docker test  
+Change the TITLE to reflect the docker test .
 Original Line:
 ```
-          res@MainTitle = "REAL-TIME WRF"
+res@MainTitle = "REAL-TIME WRF"
 ```
 New Line:
 ```
-          res@MainTitle = "Docker Test WRF"
+res@MainTitle = "Docker Test WRF"
 ```
-5. Run the NCL script
+Now run the script:
 ```
-    ncl wrf_Precip_multi_files.ncl
+ncl wrf_Precip_multi_files.ncl
 ```
-6. Run NCL, expected files
+After the script completes you should see the following PDF file:
 ```
-    ls -ls plt_Precip_multi_files.pdf 
-    1944 -rw-r--r-- 1 wrfuser wrf 1986904 Dec  3 20:19 plt_Precip_multi_files.pdf
+ls -l *.pdf
+-rw-r--r-- 1 wrfuser wrf 1968576 Jul 22 02:52 plt_Precip_multi_files.pdf
 ```
-7. Run NCL, view files
-   * To view this file, put this file in the visible volume directory shared between the original OS and container land.
+To view the file, copy it to `wrfoutput` so it can be retrieved outside the container:
 ```
-    cp *.pdf /wrf/wrfoutput/
+cp *.pdf /wrf/wrfoutput/
 ```
-Now you can type *exit* to return to your host OS and look in your *output* folder to find the PDF. View it, and you'll see multiple pages detailing the model weather case.
-
+Now you can type `exit` to return to your host OS and look in your `output` folder to find the PDF. View it, and you'll see multiple pages detailing the model weather case.
 
